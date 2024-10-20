@@ -14,29 +14,42 @@ const AllAppointments = () => {
   const [newDate, setNewDate] = useState('');
   const appointmentsPerPage = 7;
 
-  // Fetch appointments from the backend
-  const fetchAppointments = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/appointments');
-      const data = await response.json();
-      setAppointments(data);
-    } catch (error) {
-      console.error('Error fetching appointments:', error);
-    }
-  };
+ // Fetch appointments from the backend
+const fetchAppointments = async () => {
+  try {
+    const response = await fetch('http://localhost:5000/api/appointments');
+    const data = await response.json();
+    
+    // Get current date and remove time portion
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Midnight today
 
-  useEffect(() => {
+    // Filter out appointments that are before today
+    const upcomingAppointments = data.filter(appointment => {
+      const appointmentDate = new Date(appointment.date);
+      return appointmentDate >= today; // Keep only appointments for today and future dates
+    });
+
+    setAppointments(upcomingAppointments);
+  } catch (error) {
+    console.error('Error fetching appointments:', error);
+  }
+};
+
+useEffect(() => {
+  fetchAppointments();
+
+  // Auto-refresh at midnight
+  const now = new Date();
+  const msUntilMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0) - now;
+  const timer = setTimeout(() => {
     fetchAppointments();
+  }, msUntilMidnight);
 
-    // Auto-refresh at midnight
-    const now = new Date();
-    const msUntilMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0) - now;
-    const timer = setTimeout(() => {
-      fetchAppointments();
-    }, msUntilMidnight);
+  return () => clearTimeout(timer);
+}, []);
 
-    return () => clearTimeout(timer);
-  }, []);
+  
 
   // Pagination logic
   const indexOfLastAppointment = currentPage * appointmentsPerPage;
