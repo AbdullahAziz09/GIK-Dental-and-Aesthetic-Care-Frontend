@@ -13,7 +13,9 @@ const AllPatients = () => {
       try {
         const response = await fetch('http://localhost:5000/api/patients');
         const data = await response.json();
-        setPatients(data);
+        // Sort patients by createdAt in descending order
+        const sortedData = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setPatients(sortedData);
       } catch (error) {
         console.error('Error fetching patients:', error);
       }
@@ -25,7 +27,7 @@ const AllPatients = () => {
   const filteredPatients = patients.filter((patient) =>
     patient.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
+  
   const indexOfLastPatient = currentPage * patientsPerPage;
   const indexOfFirstPatient = indexOfLastPatient - patientsPerPage;
   const currentPatients = filteredPatients.slice(indexOfFirstPatient, indexOfLastPatient);
